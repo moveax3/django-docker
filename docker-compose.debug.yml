@@ -1,0 +1,48 @@
+version: '2'
+
+services:
+  db_en:
+    mem_limit: 512m
+    build: ./postgres/
+    volumes:
+      - ./postgres/data_en:/var/lib/postgresql/data
+      - ./fixtures:/fixtures
+    env_file:
+      - environment_en.debug.env
+
+  redis:
+    mem_limit: 128m
+    build: ./redis/
+
+  django_en:
+    mem_limit: 512m
+    build: ./django/
+    #command: ["uwsgi","--chdir=/app/", "--module=core.wsgi","--master", "--process=4" ,"--socket=:8002", "--max-requests=50", "--close-on-exec",  "--harakiri=30"]
+    command: ["bash", "/app/entrypoint.sh"]
+    volumes:
+      - ./django/src/:/app
+      - ./django/uwsgi.ini:/etc/uwsgi/apps-enabled/app.ini
+      - ./django/socket:/socket
+    env_file:
+      - environment_en.debug.env
+    depends_on:
+      - db_en
+    ports:
+      - "8000:8000"
+
+  nginx:
+    mem_limit: 128m
+    build: ./nginx/
+    depends_on:
+      - django_en
+    ports:
+        - "80:80"
+        - "443:443"
+    volumes:
+      - ./django/src/staticfiles/:/var/www/static
+      - ./django/src/mediafiles/:/var/www/media
+      - ./nginx/nginx.conf.debug:/usr/local/nginx/conf/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/htpasswd:/etc/nginx/htpasswd
+      - ./nginx/entrypoint.sh:/entrypoint.sh
+    entrypoint: /entrypoint.sh
