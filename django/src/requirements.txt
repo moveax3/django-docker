@@ -1,4 +1,4 @@
-django==1.8.18
+django
 django-modeltranslation
 django-auditlog
 django-modeladmin-reorder
@@ -10,7 +10,7 @@ django_compressor
 django-admin-honeypot
 django-mobile
 django-defender
-django-grappelli==2.10.1
+django-grappelli
 django-filebrowser
 django-appconf
 django-ratelimit
